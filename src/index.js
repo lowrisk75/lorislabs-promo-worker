@@ -282,14 +282,17 @@ function claimHtml(env, channel, meta, remaining, expired) {
           <p><strong>${escapeHtml(exhaustedReason)}</strong></p>
           <p>Thanks for the interest — we ran out faster than expected.</p>
 
+          <div class="success" style="background: rgba(80,200,120,0.08); border: 1px solid rgba(80,200,120,0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+            <p style="margin: 0;"><strong>Don't worry</strong> — Pro Annual ships with a built-in <strong>7-day free trial</strong>. Download the app, start the Annual subscription, cancel before day 7 = still free.</p>
+          </div>
+
           <div class="next-steps">
-            <p><strong>What you can still do:</strong></p>
+            <p><strong>What you can do right now:</strong></p>
             <ul style="text-align: left; max-width: 380px; margin: 0.5rem auto;">
-              <li>Try the free tier (4 cameras, fully usable):
-                <a href="https://apps.apple.com/app/id${escapeHtml(env.APP_ASC_ID)}" target="_blank" rel="noopener">Download on the App Store</a>
-              </li>
+              <li>Start the <strong>7-day free trial</strong> on the App Store (no code needed)</li>
+              <li>Use the free tier (4 cameras, fully usable, forever)</li>
               <li>Subscribe to <a href="https://lorislab.fr#newsletter" target="_blank" rel="noopener">our newsletter</a> — early subscribers get codes from the next batch</li>
-              <li>Follow the original community thread for further giveaways</li>
+              <li>Follow the original community thread for future giveaways</li>
             </ul>
           </div>
 
