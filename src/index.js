@@ -195,9 +195,8 @@ async function getMeta(env, channel) {
 
 async function verifyTurnstile(secret, token, ip) {
   if (!secret) {
-    // Dev mode — Turnstile not configured. NEVER deploy without secret set.
-    console.warn("TURNSTILE_SECRET not set — verification skipped");
-    return true;
+    // Fail closed in prod. Local dev opt-in via ALLOW_NO_TURNSTILE=true.
+    return false;
   }
   const formData = new FormData();
   formData.append("secret", secret);
