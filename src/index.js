@@ -72,11 +72,11 @@ export default {
       // GET /
       if (request.method === "GET" && path === "") {
         return new Response(landingHtml(env), {
-          headers: { "Content-Type": "text/html; charset=utf-8", ...securityHeaders() },
+          headers: { "Content-Type": "text/html; charset=utf-8", ...securityHeaders({ html: true }) },
         });
       }
 
-      return new Response("Not found", { status: 404, headers: securityHeaders() });
+      return new Response("Not found", { status: 404, headers: securityHeaders({ html: true }) });
     } catch (err) {
       // Never leak internals
       console.error("worker error", err);
