@@ -1,0 +1,33 @@
+name = "lorislabs-promo-worker"
+main = "src/index.js"
+compatibility_date = "2026-04-25"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom route — adjust after creating DNS for r.lorislab.fr
+# routes = [
+#   { pattern = "lorislab.fr/r/*", zone_name = "lorislab.fr" }
+# ]
+
+# KV namespace bound as PROMO_CODES
+# Create with: wrangler kv:namespace create PROMO_CODES
+# Then put the returned id below.
+[[kv_namespaces]]
+binding = "PROMO_CODES"
+id = "REPLACE_ME_AFTER_kv_namespace_create"
+preview_id = "REPLACE_ME_AFTER_kv_namespace_create"
+
+# Public envs (non-secret)
+[vars]
+APP_NAME = "Lumen for Frigate"
+APP_ASC_ID = "6760238729"
+TURNSTILE_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY"
+# CLAIM_SCOPE: "global" (default — one code per IP across ALL channels per 24h, max security)
+#              "channel" (one code per IP per channel per 24h — looser, allows multi-claim across channels)
+CLAIM_SCOPE = "global"
+
+# Secrets — set with: wrangler secret put TURNSTILE_SECRET
+# (do NOT commit the secret — it's bound at deploy time)
+
+# Optional observability
+# [observability]
+# enabled = true
