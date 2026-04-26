@@ -30,6 +30,13 @@ upload_channel() {
   local name="$2"
   local tagline="$3"
   local file="$4"
+  local app_name="${5:-$DEFAULT_APP_NAME}"
+  local app_ascid="${6:-$DEFAULT_APP_ASCID}"
+
+  if [[ -z "$app_name" || -z "$app_ascid" ]]; then
+    echo "✗ Missing app context. Set DEFAULT_APP_NAME + DEFAULT_APP_ASCID at the top of the script, or pass arg 5+6 explicitly."
+    return 1
+  fi
 
   if [[ ! -f "$file" ]]; then
     echo "✗ Missing: $file"
@@ -38,18 +45,26 @@ upload_channel() {
 
   local total
   total=$(grep -cE '^[A-Z0-9]' "$file")
-  echo "→ $channel ($total codes): $name"
+  echo "→ $channel ($total codes): $name [app=$app_name]"
 
   local bulk="$TMP/$channel.json"
-  python3 - "$channel" "$name" "$tagline" "$total" "$file" "$bulk" <<'PY'
+  python3 - "$channel" "$name" "$tagline" "$total" "$file" "$bulk" "$app_name" "$app_ascid" <<'PY'
 import json, sys, re
-channel, name, tagline, total, src, dst = sys.argv[1:7]
+channel, name, tagline, total, src, dst, app_name, app_ascid = sys.argv[1:9]
 total = int(total)
 codes = [c.strip() for c in open(src).read().splitlines() if re.match(r'^[A-Z0-9]', c.strip())]
 assert len(codes) == total, f"count mismatch: {len(codes)} vs {total}"
-out = []
-out.append({"key": f"meta:{channel}", "value": json.dumps({"name": name, "tagline": tagline, "total": total})})
-out.append({"key": f"cursor:{channel}", "value": "0"})
+meta = {
+    "appName": app_name,
+    "appASCID": app_ascid,
+    "name": name,
+    "tagline": tagline,
+    "total": total,
+}
+out = [
+    {"key": f"meta:{channel}",   "value": json.dumps(meta, ensure_ascii=False)},
+    {"key": f"cursor:{channel}", "value": "0"},
+]
 for i, code in enumerate(codes):
     out.append({"key": f"pool:{channel}:{i:06d}", "value": code})
 json.dump(out, open(dst, "w"))
@@ -60,6 +75,11 @@ PY
   "$WRANGLER" kv:bulk put "$bulk" --binding=PROMO_CODES --preview false 2>&1 | tail -5
   echo
 }
+
+# Default app context — set these once per run so subsequent
+# upload_channel calls inherit. Override per-call via args 5+6.
+DEFAULT_APP_NAME="Lumen for Frigate"
+DEFAULT_APP_ASCID="6760238729"
 
 upload_channel "frigate-may" \
   "r/frigate_nvr May 2026" \

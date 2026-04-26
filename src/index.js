@@ -148,9 +148,11 @@ async function handleClaim(request, env, channel, ip) {
     }),
   ]);
 
+  const ascID = meta.appASCID || env.APP_ASC_ID;
+  if (!ascID) return { ok: false, error: "MISSING_APP_ASC_ID" };
   const redeemUrl = (meta.redeemUrlTemplate ||
     "https://apps.apple.com/redeem?ctx=offercodes&id={ASC_ID}&code={CODE}")
-    .replace("{ASC_ID}", env.APP_ASC_ID)
+    .replace("{ASC_ID}", ascID)
     .replace("{CODE}", code);
 
   return { ok: true, code, redeemUrl, channel: meta.name };
@@ -247,11 +249,11 @@ async function renderClaimPage(env, channel) {
 function landingHtml(env) {
   return baseHtml(`
     <main class="centered">
-      <h1>${escapeHtml(env.APP_NAME)} — promo codes</h1>
-      <p>This page distributes one-time promo codes for ${escapeHtml(env.APP_NAME)}. You'll have arrived here from a community thread (Reddit, Discord, forum) — go back and follow the channel-specific link.</p>
-      <p><a href="https://lorislab.fr/apps/lumen.html">Learn more about ${escapeHtml(env.APP_NAME)}</a></p>
+      <h1>LorisLabs — promo codes</h1>
+      <p>This page distributes one-time promo codes for LorisLabs apps. You'll have arrived here from a community thread (Reddit, Discord, forum) — go back and follow the channel-specific link.</p>
+      <p><a href="https://lorislab.fr">Discover all LorisLabs apps</a></p>
     </main>
-  `, env);
+  `, null);
 }
 
 function notFoundHtml(env, channel) {
@@ -259,9 +261,9 @@ function notFoundHtml(env, channel) {
     <main class="centered">
       <h1>That promo channel doesn't exist</h1>
       <p>The link you followed (<code>${escapeHtml(channel || "")}</code>) doesn't match a configured channel. Double-check the URL.</p>
-      <p><a href="https://lorislab.fr/apps/lumen.html">Lumen for Frigate on lorislab.fr</a></p>
+      <p><a href="https://lorislab.fr">LorisLabs apps</a></p>
     </main>
-  `, env);
+  `, null);
 }
 
 function claimHtml(env, channel, meta, remaining, expired) {
@@ -269,10 +271,12 @@ function claimHtml(env, channel, meta, remaining, expired) {
   const exhaustedReason = expired
     ? "This promo period has ended."
     : "All codes for this channel have been claimed.";
+  const appName  = meta.appName  || env.APP_NAME  || "App";
+  const appASCID = meta.appASCID || env.APP_ASC_ID || "";
 
   return baseHtml(`
     <main class="centered">
-      <h1>${escapeHtml(env.APP_NAME)} Pro — ${escapeHtml(meta.name || "Promo")}</h1>
+      <h1>${escapeHtml(appName)} Pro — ${escapeHtml(meta.name || "Promo")}</h1>
       <p class="subtitle">${escapeHtml(meta.tagline || "3 months Pro Monthly free.")}</p>
 
       ${exhausted ? `
@@ -296,7 +300,7 @@ function claimHtml(env, channel, meta, remaining, expired) {
           </div>
 
           <p style="margin-top: 1.5rem;">
-            <a class="btn primary" href="https://apps.apple.com/app/id${escapeHtml(env.APP_ASC_ID)}" target="_blank" rel="noopener">Open on the App Store</a>
+            <a class="btn primary" href="https://apps.apple.com/app/id${escapeHtml(appASCID)}" target="_blank" rel="noopener">Open on the App Store</a>
           </p>
         </div>
       ` : `
@@ -314,7 +318,7 @@ function claimHtml(env, channel, meta, remaining, expired) {
           <p class="code" id="claim-code"></p>
           <a class="btn primary" id="claim-redeem-url" href="#" target="_blank" rel="noopener">Tap to redeem on the App Store</a>
           <p class="subtle">If you tap on iOS, the App Store opens with the code pre-filled. On Mac/PC, copy the code above and paste into the App Store app on your iPhone.</p>
-          <p class="subtle">Enjoying the app? <a href="https://apps.apple.com/app/id${escapeHtml(env.APP_ASC_ID)}?action=write-review" target="_blank" rel="noopener">A short honest review</a> helps a solo dev a ton — completely optional.</p>
+          <p class="subtle">Enjoying the app? <a href="https://apps.apple.com/app/id${escapeHtml(appASCID)}?action=write-review" target="_blank" rel="noopener">A short honest review</a> helps a solo dev a ton — completely optional.</p>
         </div>
 
         <p class="subtle limit-note">One code per IP per 24h. Cloudflare Turnstile required.</p>
@@ -384,16 +388,24 @@ function claimHtml(env, channel, meta, remaining, expired) {
         });
       }
     </script>
-  `, env);
+  `, `${appName} — Promo`);
 }
 
-function baseHtml(content, env) {
+function baseHtml(content, envOrTitle) {
+  // envOrTitle: either an env object (legacy) or null/undefined for landing/404,
+  // or a string title to inject directly. We default to "LorisLabs — Promo".
+  let title = "LorisLabs — Promo";
+  if (typeof envOrTitle === "string" && envOrTitle.length > 0) {
+    title = envOrTitle;
+  } else if (envOrTitle && typeof envOrTitle === "object" && envOrTitle.APP_NAME) {
+    title = `${envOrTitle.APP_NAME} — Promo`;
+  }
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${escapeHtml(env.APP_NAME)} — Promo</title>
+<title>${escapeHtml(title)}</title>
 <meta name="robots" content="noindex,nofollow">
 <style>
   :root { color-scheme: dark; }

@@ -17,9 +17,12 @@ id = "25b9b4e8368d46989057e6052db3e120"
 preview_id = "52e6f88673424267b706ab1895bddc60"
 
 # Public envs (non-secret)
+#
+# This worker is multi-app: each channel's `meta:<channel>` JSON carries
+# its own `appName` + `appASCID`, so we no longer need APP_NAME / APP_ASC_ID
+# as global vars. Adding a new app means uploading new channels via the
+# scripts/bulk-upload-all.sh template — no redeploy needed.
 [vars]
-APP_NAME = "Lumen for Frigate"
-APP_ASC_ID = "6760238729"
 TURNSTILE_SITE_KEY = "0x4AAAAAADDRP5yDHt5deace"
 # CLAIM_SCOPE: "global" (default — one code per IP across ALL channels per 24h, max security)
 #              "channel" (one code per IP per channel per 24h — looser, allows multi-claim across channels)
