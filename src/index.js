@@ -317,6 +317,7 @@ function claimHtml(env, channel, meta, remaining, expired) {
           <p class="label">Your code</p>
           <p class="code" id="claim-code"></p>
           <a class="btn primary" id="claim-redeem-url" href="#" target="_blank" rel="noopener">Tap to redeem on the App Store</a>
+          <p class="subtle" id="claim-countdown" hidden></p>
           <p class="subtle">If you tap on iOS, the App Store opens with the code pre-filled. On Mac/PC, copy the code above and paste into the App Store app on your iPhone.</p>
           <p class="subtle">Enjoying the app? <a href="https://apps.apple.com/app/id${escapeHtml(appASCID)}?action=write-review" target="_blank" rel="noopener">A short honest review</a> helps a solo dev a ton — completely optional.</p>
         </div>
@@ -372,6 +373,27 @@ function claimHtml(env, channel, meta, remaining, expired) {
               if (successEl) successEl.hidden = false;
               if (codeEl) codeEl.textContent = json.code;
               if (urlEl) urlEl.href = json.redeemUrl;
+              // iOS one-tap: auto-redirect to redemption sheet after 3s.
+              // Desktop/Android keep the manual button (apps.apple.com/redeem
+              // is useless without an iPhone).
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              if (isIOS) {
+                const countdownEl = document.getElementById('claim-countdown');
+                let secs = 3;
+                if (countdownEl) {
+                  countdownEl.hidden = false;
+                  countdownEl.textContent = 'Opening App Store in ' + secs + '…';
+                }
+                const interval = setInterval(() => {
+                  secs -= 1;
+                  if (countdownEl) countdownEl.textContent = 'Opening App Store in ' + secs + '…';
+                  if (secs <= 0) {
+                    clearInterval(interval);
+                    location.href = json.redeemUrl;
+                  }
+                }, 1000);
+              }
             } else {
               const msg = ERROR_MESSAGES[json.error] || 'Something went wrong. Try again later.';
               if (errorEl) { errorEl.textContent = msg; errorEl.hidden = false; }
